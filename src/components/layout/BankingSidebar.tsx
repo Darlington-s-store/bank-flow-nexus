@@ -44,7 +44,7 @@ const BankingSidebar = () => {
   return (
     <Sidebar>
       <SidebarHeader className="flex h-14 items-center border-b px-4">
-        <div className="flex items-center gap-2 text-primary-foreground">
+        <div className="flex items-center gap-2 text-primary">
           <BanknoteIcon className="h-6 w-6" />
           {state !== "collapsed" && <span className="text-xl font-bold">BankFlow</span>}
         </div>
@@ -59,7 +59,7 @@ const BankingSidebar = () => {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link to="/">
+                  <Link to="/dashboard">
                     <Home className="h-5 w-5" />
                     <span>Dashboard</span>
                   </Link>

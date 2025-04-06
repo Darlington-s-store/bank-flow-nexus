@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ import {
   Eye, 
   Filter, 
   MoreVertical, 
+  Plus,
   Search, 
   XCircle 
 } from "lucide-react";
@@ -28,99 +30,50 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { useState } from "react";
+import CreateTransactionForm from "@/components/transactions/CreateTransactionForm";
 
-// Sample transactions data
-const transactions = [
-  {
-    id: "T1001",
-    accountId: "A1001",
-    accountNumber: "4523781900",
-    customerName: "Jane Cooper",
-    type: "deposit",
-    description: "ATM Deposit",
-    amount: 2500.00,
-    date: "2025-04-05",
-    time: "14:30:22",
-    status: "completed",
-    reference: "ATMDEPCSH2504"
-  },
-  {
-    id: "T1002",
-    accountId: "A1001",
-    accountNumber: "4523781900",
-    customerName: "Jane Cooper",
-    type: "withdrawal",
-    description: "ATM Withdrawal",
-    amount: 500.00,
-    date: "2025-04-04",
-    time: "10:15:05",
-    status: "completed",
-    reference: "ATMWDR2504"
-  },
-  {
-    id: "T1003",
-    accountId: "A1001",
-    accountNumber: "4523781900",
-    customerName: "Jane Cooper",
-    type: "transfer",
-    description: "Transfer to 7891456200",
-    amount: 1200.00,
-    date: "2025-04-03",
-    time: "18:45:30",
-    status: "completed",
-    reference: "TRFOUT2504"
-  },
-  {
-    id: "T1004",
-    accountId: "A1002",
-    accountNumber: "7891456200",
-    customerName: "Robert Miller",
-    type: "loan_payment",
-    description: "Loan EMI",
-    amount: 850.00,
-    date: "2025-04-01",
-    time: "09:30:00",
-    status: "completed",
-    reference: "LOANPAY2504"
-  },
-  {
-    id: "T1005",
-    accountId: "A1003",
-    accountNumber: "3456912700",
-    customerName: "Lisa Johnson",
-    type: "salary",
-    description: "Salary Credit",
-    amount: 5000.00,
-    date: "2025-03-31",
-    time: "12:00:15",
-    status: "completed",
-    reference: "SALCR2503"
-  },
-  {
-    id: "T1006",
-    accountId: "A1004",
-    accountNumber: "9087234500",
-    customerName: "Michael Wilson",
-    type: "transfer",
-    description: "Transfer to 5678123400",
-    amount: 2000.00,
-    date: "2025-03-28",
-    time: "15:22:45",
-    status: "failed",
-    reference: "TRFOUT2503"
-  }
-];
+// Initial empty transactions array
+const initialTransactions: any[] = [];
 
 const Transactions = () => {
+  const [transactions, setTransactions] = useState(initialTransactions);
   const [date, setDate] = useState<Date | undefined>(undefined);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleTransactionCreated = (newTransaction: any) => {
+    setTransactions([...transactions, newTransaction]);
+  };
+
+  const handleCancelTransaction = (transactionId: string) => {
+    setTransactions(transactions.map(transaction => {
+      if (transaction.id === transactionId) {
+        return { ...transaction, status: "cancelled" };
+      }
+      return transaction;
+    }));
+  };
+
+  // Filter transactions based on search query and selected date
+  const filteredTransactions = transactions.filter(transaction => {
+    const matchesSearch = 
+      transaction.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      transaction.accountNumber.includes(searchQuery) ||
+      transaction.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      transaction.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      transaction.description.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesDate = date ? transaction.date === date.toISOString().split('T')[0] : true;
+    
+    return matchesSearch && matchesDate;
+  });
 
   const totalInflow = transactions
-    .filter(t => t.status === "completed" && ["deposit", "salary"].includes(t.type))
+    .filter(t => t.status === "completed" && ["deposit", "refund"].includes(t.type))
     .reduce((sum, t) => sum + t.amount, 0);
     
   const totalOutflow = transactions
-    .filter(t => t.status === "completed" && ["withdrawal", "transfer", "loan_payment"].includes(t.type))
+    .filter(t => t.status === "completed" && ["withdrawal", "transfer", "payment"].includes(t.type))
     .reduce((sum, t) => sum + t.amount, 0);
 
   return (
@@ -133,7 +86,10 @@ const Transactions = () => {
           </div>
           <div className="flex gap-2">
             <Button variant="outline">Download Report</Button>
-            <Button>New Transaction</Button>
+            <Button className="gap-1" onClick={() => setCreateDialogOpen(true)}>
+              <Plus className="h-4 w-4" />
+              New Transaction
+            </Button>
           </div>
         </div>
         
@@ -145,8 +101,8 @@ const Transactions = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">250</div>
-              <p className="text-xs text-muted-foreground">Last 30 days</p>
+              <div className="text-2xl font-bold">{transactions.length}</div>
+              <p className="text-xs text-muted-foreground">All time</p>
             </CardContent>
           </Card>
           <Card>
@@ -156,13 +112,15 @@ const Transactions = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-banking-success">
+              <div className="text-2xl font-bold text-green-500">
                 +${totalInflow.toFixed(2)}
               </div>
-              <div className="flex items-center mt-1">
-                <ArrowDownRight className="h-4 w-4 text-banking-success mr-1" />
-                <p className="text-xs text-banking-success">14.5% increase from last month</p>
-              </div>
+              {totalInflow > 0 && (
+                <div className="flex items-center mt-1">
+                  <ArrowDownRight className="h-4 w-4 text-green-500 mr-1" />
+                  <p className="text-xs text-green-500">Positive cash flow</p>
+                </div>
+              )}
             </CardContent>
           </Card>
           <Card>
@@ -172,13 +130,15 @@ const Transactions = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-banking-danger">
+              <div className="text-2xl font-bold text-red-500">
                 -${totalOutflow.toFixed(2)}
               </div>
-              <div className="flex items-center mt-1">
-                <ArrowUpRight className="h-4 w-4 text-banking-danger mr-1" />
-                <p className="text-xs text-banking-danger">8.2% increase from last month</p>
-              </div>
+              {totalOutflow > 0 && (
+                <div className="flex items-center mt-1">
+                  <ArrowUpRight className="h-4 w-4 text-red-500 mr-1" />
+                  <p className="text-xs text-red-500">Outgoing payments</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -188,7 +148,12 @@ const Transactions = () => {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="relative sm:w-[300px] md:w-[400px]">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search transactions..." className="pl-8" />
+                <Input 
+                  placeholder="Search transactions..." 
+                  className="pl-8" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
               <div className="flex flex-wrap gap-2">
                 <Popover>
@@ -210,6 +175,17 @@ const Transactions = () => {
                       initialFocus
                       className={cn("p-3 pointer-events-auto")}
                     />
+                    {date && (
+                      <div className="border-t p-3 flex justify-end">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => setDate(undefined)}
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                    )}
                   </PopoverContent>
                 </Popover>
                 <Button variant="outline" size="sm" className="gap-1">
@@ -239,107 +215,147 @@ const Transactions = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {transactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell className="font-medium">{transaction.id}</TableCell>
-                    <TableCell>
-                      <div>
-                        <p>{transaction.accountNumber}</p>
-                        <p className="text-xs text-muted-foreground">{transaction.customerName}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className={cn(
-                          "h-2 w-2 rounded-full",
-                          transaction.type === "deposit" || transaction.type === "salary"
-                            ? "bg-banking-success"
-                            : transaction.type === "withdrawal" || transaction.type === "transfer" || transaction.type === "loan_payment"
-                              ? "bg-banking-danger"
-                              : "bg-banking-info"
-                        )} />
-                        <span className="capitalize">
-                          {transaction.type.replace("_", " ")}
+                {filteredTransactions.length > 0 ? (
+                  filteredTransactions.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell className="font-medium">{transaction.id}</TableCell>
+                      <TableCell>
+                        <div>
+                          <p>{transaction.accountNumber}</p>
+                          <p className="text-xs text-muted-foreground">{transaction.customerName}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className={cn(
+                            "h-2 w-2 rounded-full",
+                            transaction.type === "deposit" || transaction.type === "refund"
+                              ? "bg-green-500"
+                              : transaction.type === "withdrawal" || transaction.type === "transfer" || transaction.type === "payment"
+                                ? "bg-red-500"
+                                : "bg-blue-500"
+                          )} />
+                          <span className="capitalize">
+                            {transaction.type.replace("_", " ")}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{transaction.description}</TableCell>
+                      <TableCell>
+                        <span className={cn(
+                          "font-medium",
+                          transaction.type === "deposit" || transaction.type === "refund"
+                            ? "text-green-500"
+                            : "text-red-500"
+                        )}>
+                          {transaction.type === "deposit" || transaction.type === "refund" ? "+" : "-"}
+                          ${transaction.amount.toFixed(2)}
                         </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{transaction.description}</TableCell>
-                    <TableCell>
-                      <span className={cn(
-                        "font-medium",
-                        transaction.type === "deposit" || transaction.type === "salary"
-                          ? "text-banking-success"
-                          : "text-banking-danger"
-                      )}>
-                        {transaction.type === "deposit" || transaction.type === "salary" ? "+" : "-"}
-                        ${transaction.amount.toFixed(2)}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p>{transaction.date}</p>
-                        <p className="text-xs text-muted-foreground">{transaction.time}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={
-                          transaction.status === "completed" 
-                            ? "default" 
-                            : transaction.status === "pending" 
-                              ? "outline" 
-                              : "destructive"
-                        }
-                      >
-                        {transaction.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
-                            <span className="sr-only">Actions</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="flex items-center gap-2">
-                            <Eye className="h-4 w-4" /> View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="flex items-center gap-2">
-                            <Download className="h-4 w-4" /> Download Receipt
-                          </DropdownMenuItem>
-                          {transaction.status !== "completed" && (
-                            <DropdownMenuItem className="flex items-center gap-2 text-destructive">
-                              <XCircle className="h-4 w-4" /> Cancel Transaction
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p>{transaction.date}</p>
+                          <p className="text-xs text-muted-foreground">{transaction.time}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={
+                            transaction.status === "completed" 
+                              ? "default" 
+                              : transaction.status === "pending" 
+                                ? "outline" 
+                                : "destructive"
+                          }
+                        >
+                          {transaction.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="h-4 w-4" />
+                              <span className="sr-only">Actions</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="flex items-center gap-2">
+                              <Eye className="h-4 w-4" /> View Details
                             </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            <DropdownMenuItem className="flex items-center gap-2">
+                              <Download className="h-4 w-4" /> Download Receipt
+                            </DropdownMenuItem>
+                            {transaction.status === "pending" && (
+                              <DropdownMenuItem 
+                                className="flex items-center gap-2 text-destructive"
+                                onClick={() => handleCancelTransaction(transaction.id)}
+                              >
+                                <XCircle className="h-4 w-4" /> Cancel Transaction
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={8} className="h-24 text-center">
+                      {searchQuery || date ? (
+                        <div className="flex flex-col items-center justify-center">
+                          <p className="text-lg font-medium">No transactions found</p>
+                          <p className="text-sm text-muted-foreground">
+                            Try adjusting your search or date filters
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center">
+                          <p className="text-lg font-medium">No transactions yet</p>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Create your first transaction to get started
+                          </p>
+                          <Button 
+                            className="gap-1" 
+                            onClick={() => setCreateDialogOpen(true)}
+                          >
+                            <Plus className="h-4 w-4" />
+                            New Transaction
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </div>
           
-          <div className="p-4 border-t flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              Showing <strong>6</strong> of <strong>250</strong> transactions
-            </p>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled>
-                Previous
-              </Button>
-              <Button variant="outline" size="sm">
-                Next
-              </Button>
+          {transactions.length > 0 && (
+            <div className="p-4 border-t flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Showing <strong>{filteredTransactions.length}</strong> of <strong>{transactions.length}</strong> transactions
+              </p>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" disabled>
+                  Previous
+                </Button>
+                <Button variant="outline" size="sm" disabled={filteredTransactions.length === transactions.length}>
+                  Next
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
+
+      <CreateTransactionForm 
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onTransactionCreated={handleTransactionCreated}
+      />
     </MainLayout>
   );
 };

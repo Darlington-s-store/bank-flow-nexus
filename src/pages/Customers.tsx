@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,64 +13,33 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Eye, MoreVertical, Plus, Search, Trash2, UserPlus } from "lucide-react";
+import { Edit, Eye, MoreVertical, Search, Trash2, UserPlus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import CreateCustomerForm from "@/components/customers/CreateCustomerForm";
 
-// Sample customer data
-const customers = [
-  {
-    id: "C1001",
-    name: "Jane Cooper",
-    email: "jane.cooper@example.com",
-    phone: "(555) 123-4567",
-    accountType: "Savings",
-    status: "active",
-    dateAdded: "2025-01-15",
-    imageSrc: ""
-  },
-  {
-    id: "C1002",
-    name: "Robert Miller",
-    email: "robert.miller@example.com",
-    phone: "(555) 234-5678",
-    accountType: "Current",
-    status: "active",
-    dateAdded: "2025-02-05",
-    imageSrc: ""
-  },
-  {
-    id: "C1003",
-    name: "Lisa Johnson",
-    email: "lisa.johnson@example.com",
-    phone: "(555) 345-6789",
-    accountType: "Savings",
-    status: "inactive",
-    dateAdded: "2025-02-18",
-    imageSrc: ""
-  },
-  {
-    id: "C1004",
-    name: "Michael Wilson",
-    email: "michael.wilson@example.com",
-    phone: "(555) 456-7890",
-    accountType: "Current",
-    status: "active",
-    dateAdded: "2025-03-02",
-    imageSrc: ""
-  },
-  {
-    id: "C1005",
-    name: "Sarah Davis",
-    email: "sarah.davis@example.com",
-    phone: "(555) 567-8901",
-    accountType: "Fixed Deposit",
-    status: "pending",
-    dateAdded: "2025-03-10",
-    imageSrc: ""
-  }
-];
+// Sample customer data - this will be empty initially and populated by admin
+const initialCustomers: any[] = [];
 
 const Customers = () => {
+  const [customers, setCustomers] = useState(initialCustomers);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleCustomerCreated = (newCustomer: any) => {
+    setCustomers([...customers, newCustomer]);
+  };
+
+  const handleDeleteCustomer = (customerId: string) => {
+    setCustomers(customers.filter(customer => customer.id !== customerId));
+  };
+
+  const filteredCustomers = customers.filter(customer => 
+    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    customer.phone.includes(searchQuery) ||
+    customer.id.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <MainLayout>
       <div className="flex flex-col gap-6">
@@ -78,7 +48,7 @@ const Customers = () => {
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Customers</h1>
             <p className="text-muted-foreground">Manage customer accounts and profiles</p>
           </div>
-          <Button className="gap-1">
+          <Button className="gap-1" onClick={() => setCreateDialogOpen(true)}>
             <UserPlus className="h-4 w-4" />
             Add Customer
           </Button>
@@ -89,7 +59,12 @@ const Customers = () => {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="relative sm:w-[300px] md:w-[400px]">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search customers..." className="pl-8" />
+                <Input 
+                  placeholder="Search customers..." 
+                  className="pl-8" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm">
@@ -115,87 +90,127 @@ const Customers = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {customers.map((customer) => (
-                  <TableRow key={customer.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarImage src={customer.imageSrc} alt={customer.name} />
-                          <AvatarFallback className="bg-primary text-primary-foreground">
-                            {customer.name.split(" ").map(n => n[0]).join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{customer.name}</p>
-                          <p className="text-xs text-muted-foreground">ID: {customer.id}</p>
+                {filteredCustomers.length > 0 ? (
+                  filteredCustomers.map((customer) => (
+                    <TableRow key={customer.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar>
+                            <AvatarImage src={customer.imageSrc} alt={customer.name} />
+                            <AvatarFallback className="bg-primary text-primary-foreground">
+                              {customer.name.split(" ").map((n: string) => n[0]).join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{customer.name}</p>
+                            <p className="text-xs text-muted-foreground">ID: {customer.id}</p>
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p>{customer.email}</p>
-                        <p className="text-sm text-muted-foreground">{customer.phone}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>{customer.accountType}</TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={
-                          customer.status === "active" 
-                            ? "default" 
-                            : customer.status === "inactive" 
-                              ? "secondary" 
-                              : "outline"
-                        }
-                      >
-                        {customer.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{customer.dateAdded}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
-                            <span className="sr-only">Actions</span>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p>{customer.email}</p>
+                          <p className="text-sm text-muted-foreground">{customer.phone}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>{customer.accountType}</TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={
+                            customer.status === "active" 
+                              ? "default" 
+                              : customer.status === "inactive" 
+                                ? "secondary" 
+                                : "outline"
+                          }
+                        >
+                          {customer.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{customer.dateAdded}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="h-4 w-4" />
+                              <span className="sr-only">Actions</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="flex items-center gap-2">
+                              <Eye className="h-4 w-4" /> View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="flex items-center gap-2">
+                              <Edit className="h-4 w-4" /> Edit Customer
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="flex items-center gap-2 text-destructive"
+                              onClick={() => handleDeleteCustomer(customer.id)}
+                            >
+                              <Trash2 className="h-4 w-4" /> Delete Customer
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">
+                      {searchQuery ? (
+                        <div className="flex flex-col items-center justify-center">
+                          <p className="text-lg font-medium">No customers found</p>
+                          <p className="text-sm text-muted-foreground">
+                            Try adjusting your search criteria
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center">
+                          <p className="text-lg font-medium">No customers yet</p>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Add your first customer to get started
+                          </p>
+                          <Button 
+                            className="gap-1" 
+                            onClick={() => setCreateDialogOpen(true)}
+                          >
+                            <UserPlus className="h-4 w-4" />
+                            Add Customer
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="flex items-center gap-2">
-                            <Eye className="h-4 w-4" /> View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="flex items-center gap-2">
-                            <Edit className="h-4 w-4" /> Edit Customer
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="flex items-center gap-2 text-destructive">
-                            <Trash2 className="h-4 w-4" /> Delete Customer
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </div>
           
-          <div className="p-4 border-t flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              Showing <strong>5</strong> of <strong>25</strong> customers
-            </p>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled>
-                Previous
-              </Button>
-              <Button variant="outline" size="sm">
-                Next
-              </Button>
+          {customers.length > 0 && (
+            <div className="p-4 border-t flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Showing <strong>{filteredCustomers.length}</strong> of <strong>{customers.length}</strong> customers
+              </p>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" disabled>
+                  Previous
+                </Button>
+                <Button variant="outline" size="sm" disabled={filteredCustomers.length === customers.length}>
+                  Next
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
+
+      <CreateCustomerForm 
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onCustomerCreated={handleCustomerCreated}
+      />
     </MainLayout>
   );
 };
