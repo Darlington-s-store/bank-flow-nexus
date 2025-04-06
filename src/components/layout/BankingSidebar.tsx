@@ -28,16 +28,25 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const BankingSidebar = () => {
-  const { collapsed } = useSidebar();
+  const { state } = useSidebar();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <Sidebar>
       <SidebarHeader className="flex h-14 items-center border-b px-4">
         <div className="flex items-center gap-2 text-primary-foreground">
           <BanknoteIcon className="h-6 w-6" />
-          {!collapsed && <span className="text-xl font-bold">BankFlow</span>}
+          {state !== "collapsed" && <span className="text-xl font-bold">BankFlow</span>}
         </div>
         <div className="flex-1" />
         <SidebarTrigger className="h-8 w-8" />
@@ -131,7 +140,11 @@ const BankingSidebar = () => {
             <HelpCircle className="h-5 w-5" />
             <span>Help & Support</span>
           </Button>
-          <Button variant="ghost" className="justify-start gap-2 px-2 text-destructive">
+          <Button 
+            variant="ghost" 
+            className="justify-start gap-2 px-2 text-destructive"
+            onClick={handleLogout}
+          >
             <LogOut className="h-5 w-5" />
             <span>Logout</span>
           </Button>
