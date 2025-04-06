@@ -2,7 +2,8 @@
 import { Badge, BadgeProps } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-type CustomBadgeProps = BadgeProps & {
+// Define a custom type that extends BadgeProps and adds 'success' as a valid variant
+type CustomBadgeProps = Omit<BadgeProps, 'variant'> & {
   variant?: "default" | "destructive" | "outline" | "secondary" | "success";
 };
 
@@ -16,7 +17,7 @@ export function CustomBadge({
   
   return (
     <Badge
-      variant={isSuccess ? "secondary" : variant as BadgeProps["variant"]}
+      variant={isSuccess ? "secondary" : variant as Exclude<CustomBadgeProps["variant"], "success">}
       className={cn(
         isSuccess && "bg-green-100 text-green-800 hover:bg-green-200",
         className

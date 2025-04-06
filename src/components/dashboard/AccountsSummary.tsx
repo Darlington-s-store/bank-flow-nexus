@@ -1,6 +1,7 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+import { CustomBadge } from "@/components/ui/custom-badge";
 import { BarChart, LineChart } from "@/components/ui/charts";
 import { cn } from "@/lib/utils";
 
@@ -33,9 +34,9 @@ const AccountsSummary = () => {
             Distribution and growth of different account types
           </CardDescription>
         </div>
-        <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-200">
+        <CustomBadge variant="success">
           +12.5% growth
-        </Badge>
+        </CustomBadge>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="distribution">
