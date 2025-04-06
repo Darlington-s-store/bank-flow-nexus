@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,25 +12,53 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+import { CustomBadge } from "@/components/ui/custom-badge";
 import { Edit, Eye, MoreVertical, Search, Trash2, UserPlus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import CreateCustomerForm from "@/components/customers/CreateCustomerForm";
+import { getStoreData, saveStoreData, deleteStoreItem } from "@/utils/localStorage";
+import { toast } from "sonner";
 
-// Sample customer data - this will be empty initially and populated by admin
-const initialCustomers: any[] = [];
+// Define Customer type
+export interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  accountType: string;
+  initialDeposit: number;
+  status: string;
+  dateAdded: string;
+  accountNumber: string;
+  imageSrc: string;
+}
 
 const Customers = () => {
-  const [customers, setCustomers] = useState(initialCustomers);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleCustomerCreated = (newCustomer: any) => {
-    setCustomers([...customers, newCustomer]);
+  // Load customers from localStorage on initial render
+  useEffect(() => {
+    const storedCustomers = getStoreData<Customer>('customers');
+    setCustomers(storedCustomers);
+  }, []);
+
+  const handleCustomerCreated = (newCustomer: Customer) => {
+    const updatedCustomers = [...customers, newCustomer];
+    setCustomers(updatedCustomers);
+    // Save to localStorage
+    saveStoreData('customers', updatedCustomers);
+    toast.success("Customer added and saved to database");
   };
 
   const handleDeleteCustomer = (customerId: string) => {
-    setCustomers(customers.filter(customer => customer.id !== customerId));
+    const updatedCustomers = customers.filter(customer => customer.id !== customerId);
+    setCustomers(updatedCustomers);
+    // Save to localStorage
+    deleteStoreItem('customers', customerId);
+    toast.success("Customer deleted from database");
   };
 
   const filteredCustomers = customers.filter(customer => 

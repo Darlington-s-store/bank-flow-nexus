@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -30,6 +29,23 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { addStoreItem } from "@/utils/localStorage";
+
+// Define Transaction type
+export interface Transaction {
+  id: string;
+  accountId: string;
+  accountNumber: string;
+  customerName: string;
+  type: string;
+  description: string;
+  amount: number;
+  date: string;
+  time: string;
+  status: string;
+  reference: string;
+  destinationAccount: string | null;
+}
 
 const transactionSchema = z.object({
   accountNumber: z.string().min(10, "Account number must be at least 10 digits"),
@@ -49,7 +65,7 @@ type TransactionFormValues = z.infer<typeof transactionSchema>;
 interface CreateTransactionFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onTransactionCreated: (transaction: any) => void;
+  onTransactionCreated: (transaction: Transaction) => void;
 }
 
 const CreateTransactionForm = ({
@@ -72,27 +88,21 @@ const CreateTransactionForm = ({
     },
   });
 
-  // Watch the transaction type to conditionally show fields
   const transactionType = form.watch("type");
 
   const onSubmit = async (data: TransactionFormValues) => {
     setIsSubmitting(true);
     
     try {
-      // In a real app, this would be an API call to create the transaction
-      // For demo purposes, we're simulating this with a timeout
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Generate current date and time
       const now = new Date();
       const date = now.toISOString().split('T')[0];
       const time = now.toTimeString().split(' ')[0];
       
-      // Generate a reference number if not provided
       const ref = data.reference || `TRX${Math.floor(10000000 + Math.random() * 90000000)}`;
       
-      // Create transaction object
-      const newTransaction = {
+      const newTransaction: Transaction = {
         id: `T${Math.floor(1000 + Math.random() * 9000)}`,
         accountId: `A${Math.floor(1000 + Math.random() * 9000)}`,
         accountNumber: data.accountNumber,
@@ -107,14 +117,14 @@ const CreateTransactionForm = ({
         destinationAccount: data.destinationAccount || null
       };
       
-      // Call the callback to add the transaction to the parent component's state
+      addStoreItem('transactions', newTransaction);
+      
       onTransactionCreated(newTransaction);
       
-      // Close the dialog and reset the form
       onOpenChange(false);
       form.reset();
       
-      toast.success("Transaction created successfully");
+      toast.success("Transaction created successfully and saved to database");
     } catch (error) {
       toast.error("Failed to create transaction");
       console.error("Error creating transaction:", error);

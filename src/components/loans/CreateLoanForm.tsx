@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -29,6 +28,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { addStoreItem } from "@/utils/localStorage";
+
+// Define Loan type
+export interface Loan {
+  id: string;
+  accountId: string;
+  accountNumber: string;
+  customerName: string;
+  type: string;
+  amount: number;
+  amountPaid: number;
+  interestRate: number;
+  term: number;
+  monthsRemaining: number;
+  startDate: string;
+  nextPaymentDate: string;
+  nextPaymentAmount: number;
+  status: string;
+  purpose: string;
+}
 
 const loanSchema = z.object({
   customerName: z.string().min(2, "Customer name must be at least 2 characters"),
@@ -54,7 +73,7 @@ type LoanFormValues = z.infer<typeof loanSchema>;
 interface CreateLoanFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onLoanCreated: (loan: any) => void;
+  onLoanCreated: (loan: Loan) => void;
 }
 
 const CreateLoanForm = ({
@@ -100,7 +119,7 @@ const CreateLoanForm = ({
       const nextPaymentAmount = (amount * monthlyRate * Math.pow(1 + monthlyRate, term)) / 
                                (Math.pow(1 + monthlyRate, term) - 1);
       
-      const newLoan = {
+      const newLoan: Loan = {
         id: `L${Math.floor(1000 + Math.random() * 9000)}`,
         accountId: `A${Math.floor(1000 + Math.random() * 9000)}`,
         accountNumber: data.accountNumber,
@@ -118,6 +137,9 @@ const CreateLoanForm = ({
         purpose: data.purpose
       };
       
+      // Store in localStorage
+      addStoreItem('loans', newLoan);
+      
       // Call the callback to add the loan to the parent component's state
       onLoanCreated(newLoan);
       
@@ -125,7 +147,7 @@ const CreateLoanForm = ({
       onOpenChange(false);
       form.reset();
       
-      toast.success("Loan application submitted successfully");
+      toast.success("Loan application submitted successfully and saved to database");
     } catch (error) {
       toast.error("Failed to submit loan application");
       console.error("Error creating loan:", error);

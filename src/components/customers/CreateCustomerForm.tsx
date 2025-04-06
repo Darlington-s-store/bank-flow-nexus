@@ -29,6 +29,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { addStoreItem } from "@/utils/localStorage";
+import { Customer } from "@/pages/Customers";
 
 const customerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -47,7 +49,7 @@ type CustomerFormValues = z.infer<typeof customerSchema>;
 interface CreateCustomerFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCustomerCreated: (customer: any) => void;
+  onCustomerCreated: (customer: Customer) => void;
 }
 
 const CreateCustomerForm = ({
@@ -78,7 +80,7 @@ const CreateCustomerForm = ({
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Generate a unique ID for the new customer
-      const newCustomer = {
+      const newCustomer: Customer = {
         id: `C${Math.floor(1000 + Math.random() * 9000)}`,
         name: data.name,
         email: data.email,
@@ -92,6 +94,9 @@ const CreateCustomerForm = ({
         imageSrc: ""
       };
       
+      // Store in localStorage
+      addStoreItem('customers', newCustomer);
+      
       // Call the callback to add the customer to the parent component's state
       onCustomerCreated(newCustomer);
       
@@ -99,7 +104,7 @@ const CreateCustomerForm = ({
       onOpenChange(false);
       form.reset();
       
-      toast.success("Customer created successfully");
+      toast.success("Customer created successfully and saved to database");
     } catch (error) {
       toast.error("Failed to create customer");
       console.error("Error creating customer:", error);
