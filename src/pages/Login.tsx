@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -29,7 +29,11 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Get the intended destination from location state, or default to dashboard
+  const from = location.state?.from?.pathname || "/dashboard";
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -44,7 +48,8 @@ const Login = () => {
     try {
       const success = await login(data.email, data.password);
       if (success) {
-        navigate("/");
+        // Redirect to the dashboard or the intended destination after login
+        navigate(from);
       }
     } finally {
       setIsLoading(false);
