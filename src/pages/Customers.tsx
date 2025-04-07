@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import CreateCustomerForm from "@/components/customers/CreateCustomerForm";
 import { getStoreData, saveStoreData, deleteStoreItem } from "@/utils/localStorage";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 // Define Customer type
 export interface Customer {
