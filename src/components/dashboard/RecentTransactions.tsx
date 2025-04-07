@@ -32,6 +32,7 @@ const sampleTransactions = [
     amount: 2500.00,
     type: "credit",
     date: "2025-04-05",
+    time: "",
     status: "completed"
   },
   {
@@ -41,6 +42,7 @@ const sampleTransactions = [
     amount: 500.00,
     type: "debit",
     date: "2025-04-04",
+    time: "",
     status: "completed"
   },
   {
@@ -50,6 +52,7 @@ const sampleTransactions = [
     amount: 1200.00,
     type: "debit",
     date: "2025-04-03",
+    time: "",
     status: "completed"
   },
   {
@@ -59,6 +62,7 @@ const sampleTransactions = [
     amount: 850.00,
     type: "debit",
     date: "2025-04-01",
+    time: "",
     status: "completed"
   },
   {
@@ -68,6 +72,7 @@ const sampleTransactions = [
     amount: 5000.00,
     type: "credit",
     date: "2025-03-31",
+    time: "",
     status: "completed"
   }
 ];

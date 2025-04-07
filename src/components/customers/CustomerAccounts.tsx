@@ -4,21 +4,55 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CustomBadge } from "@/components/ui/custom-badge";
 import { useNavigate } from "react-router-dom";
-import { Account } from "@/utils/accountsData";
+import { Account, createAccount, generateAccountNumber } from "@/utils/accountsData";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
 
 interface CustomerAccountsProps {
   customerId: string;
   accounts: Account[];
 }
 
-const CustomerAccounts = ({ customerId, accounts }: CustomerAccountsProps) => {
+const CustomerAccounts = ({ customerId, accounts: initialAccounts }: CustomerAccountsProps) => {
   const navigate = useNavigate();
+  const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
+  
+  useEffect(() => {
+    setAccounts(initialAccounts);
+  }, [initialAccounts]);
+  
+  const handleAddAccount = () => {
+    // Create a basic new account
+    const newAccount: Account = {
+      id: uuidv4(),
+      customerId,
+      accountNumber: generateAccountNumber(),
+      type: "checking", // Default type
+      balance: 0,
+      status: "active",
+      openDate: new Date().toISOString().split('T')[0]
+    };
+    
+    try {
+      // Save to localStorage
+      createAccount(newAccount);
+      
+      // Update local state
+      setAccounts([...accounts, newAccount]);
+      
+      toast.success("New account created successfully");
+    } catch (error) {
+      console.error("Error creating account:", error);
+      toast.error("Failed to create account");
+    }
+  };
   
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Accounts</CardTitle>
-        <Button variant="outline" size="sm" className="gap-1">
+        <Button variant="outline" size="sm" className="gap-1" onClick={handleAddAccount}>
           <PlusCircle className="h-4 w-4" />
           Add Account
         </Button>
@@ -56,7 +90,7 @@ const CustomerAccounts = ({ customerId, accounts }: CustomerAccountsProps) => {
         ) : (
           <div className="p-8 text-center border border-dashed rounded-lg">
             <p className="text-muted-foreground mb-4">No accounts found for this customer</p>
-            <Button className="gap-1">
+            <Button className="gap-1" onClick={handleAddAccount}>
               <PlusCircle className="h-4 w-4" />
               Create New Account
             </Button>

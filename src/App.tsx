@@ -13,6 +13,7 @@ import Index from "./pages/Index";
 import Customers from "./pages/Customers";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import Accounts from "./pages/Accounts";
+import AccountDetails from "./pages/AccountDetails";
 import Transactions from "./pages/Transactions";
 import Loans from "./pages/Loans";
 import Reports from "./pages/Reports";
@@ -61,6 +62,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Accounts />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/accounts/:accountId" 
+              element={
+                <ProtectedRoute>
+                  <AccountDetails />
                 </ProtectedRoute>
               } 
             />
