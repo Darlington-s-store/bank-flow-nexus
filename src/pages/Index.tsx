@@ -142,7 +142,7 @@ const Index = () => {
             <RecentTransactions transactions={transactions} />
           </div>
           <div className="md:col-span-1">
-            <LoanSummary loans={loans} />
+            <LoanSummary />
           </div>
         </div>
 

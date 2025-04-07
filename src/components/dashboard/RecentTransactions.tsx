@@ -148,7 +148,7 @@ const RecentTransactions = ({ transactions = [] }: RecentTransactionsProps) => {
                   ${transaction.amount.toFixed(2)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {transaction.date} {transaction.time && `at ${transaction.time}`}
+                  {transaction.date} {transaction.time ? `at ${transaction.time}` : ""}
                 </p>
               </div>
             </div>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import CreateCustomerForm from "@/components/customers/CreateCustomerForm";
 import { getStoreData, saveStoreData, deleteStoreItem } from "@/utils/localStorage";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 
 // Define Customer type
 export interface Customer {
@@ -38,6 +40,7 @@ const Customers = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
   // Load customers from localStorage on initial render
   useEffect(() => {
@@ -59,6 +62,10 @@ const Customers = () => {
     // Save to localStorage
     deleteStoreItem('customers', customerId);
     toast.success("Customer deleted from database");
+  };
+
+  const handleViewCustomer = (customerId: string) => {
+    navigate(`/customers/${customerId}`);
   };
 
   const filteredCustomers = customers.filter(customer => 
@@ -120,7 +127,7 @@ const Customers = () => {
               <TableBody>
                 {filteredCustomers.length > 0 ? (
                   filteredCustomers.map((customer) => (
-                    <TableRow key={customer.id}>
+                    <TableRow key={customer.id} className="cursor-pointer" onClick={() => handleViewCustomer(customer.id)}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar>
@@ -156,7 +163,7 @@ const Customers = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>{customer.dateAdded}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon">
@@ -167,7 +174,10 @@ const Customers = () => {
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="flex items-center gap-2">
+                            <DropdownMenuItem 
+                              className="flex items-center gap-2"
+                              onClick={() => handleViewCustomer(customer.id)}
+                            >
                               <Eye className="h-4 w-4" /> View Details
                             </DropdownMenuItem>
                             <DropdownMenuItem className="flex items-center gap-2">

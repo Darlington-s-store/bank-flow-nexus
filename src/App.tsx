@@ -11,6 +11,7 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Index from "./pages/Index";
 import Customers from "./pages/Customers";
+import CustomerDashboard from "./pages/CustomerDashboard";
 import Accounts from "./pages/Accounts";
 import Transactions from "./pages/Transactions";
 import Loans from "./pages/Loans";
@@ -44,6 +45,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Customers />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/customers/:customerId" 
+              element={
+                <ProtectedRoute>
+                  <CustomerDashboard />
                 </ProtectedRoute>
               } 
             />
